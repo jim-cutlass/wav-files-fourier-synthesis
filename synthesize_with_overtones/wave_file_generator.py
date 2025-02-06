@@ -174,15 +174,37 @@ class StretchNaturalSeventhsToTemperedFactorStrategy(FactorStrategy):
   			return originalOvertonePosition * moveFactorForNaturalSevenths
 		else:
 			return originalOvertonePosition
+			
+class ListsOfStrategies:
+	def getAllStrategies():
+		return [
+			Factor1Strategy(),
+			AlternatingStatefulStrategy(),
+			UseEveryNthHarmonicStatefulStrategy(2),
+			AlternatingSquareWaveStatefulStrategy(),
+			UseOnly2or3or5multiplesStrategy(),
+			UseEveryNthHarmonicStatefulStrategy(3),
+			Factor0Strategy(),
+			StretchedFactor1Strategy(2.0),
+			StretchedAndMovedFactor1Strategy(2.0,-1),
+			StretchThirdsToTemperedFactorStrategy(),
+			ShrinkFifthsToTemperedFactorStrategy(),
+			StretchNaturalSeventhsToTemperedFactorStrategy(),
+			FilterOutTheNaturalSeventhsStrategy(),
+			FilterOutTheFifthsStrategy(),
+			AddHalfNumberedOvertonesStrategy(),
+		]
 
 class WaveDefinition:
-	def toneAtAllTs(self,params,allTs,strategy):
-		allPhasesOfBaseFrequency = 2.0 * np.pi * params.sineFrequency * allTs
-		sumsOfHarmonicsWithAmplitude = []
+	def __init__(self, params, strategy):
+		self.params = params
+		self.strategy = strategy
+	def toneAtAllTs(self,allTs):
+		allPhasesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
 		sumsOfHarmonics = np.sin(allPhasesOfBaseFrequency)
 		for overtonePosition in range(2,maxHarmonicNumber):
-			possiblyChangedOvertonePosition = strategy.getShiftedOvertonePosition(overtonePosition)
+			possiblyChangedOvertonePosition = self.strategy.getShiftedOvertonePosition(overtonePosition)
 			addedValue = \
-				(1.0/possiblyChangedOvertonePosition)*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*params.sineFrequency*allTs)
-			sumsOfHarmonics += strategy.getFactor(overtonePosition) * addedValue
-		return params.amplitude * sumsOfHarmonics
+				(1.0/possiblyChangedOvertonePosition)*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*self.params.sineFrequency*allTs)
+			sumsOfHarmonics += self.strategy.getFactor(overtonePosition) * addedValue
+		return self.params.amplitude * sumsOfHarmonics

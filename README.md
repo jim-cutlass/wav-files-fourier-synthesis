@@ -1,3 +1,6 @@
 # wav-files-fourier-synthesis
 
-Nothing here (yet)
+Start the program with:
+python3 main.py
+
+This will generate WAV-file into the out-folder.
