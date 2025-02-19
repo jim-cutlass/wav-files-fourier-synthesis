@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import math
 import numpy as np
+import random
 
 maxHarmonicNumber = 1000
 moveFactorForThirds = ((2.0**(1/12.0))**4.0)/(5/4)
@@ -206,5 +207,17 @@ class WaveDefinition:
 			possiblyChangedOvertonePosition = self.strategy.getShiftedOvertonePosition(overtonePosition)
 			addedValue = \
 				(1.0/possiblyChangedOvertonePosition)*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*self.params.sineFrequency*allTs)
+			sumsOfHarmonics += self.strategy.getFactor(overtonePosition) * addedValue
+		return self.params.amplitude * sumsOfHarmonics
+	# to do: use DRY principle here:
+	def toneAtAllTsWithRandomOvertonePhases(self,allTs):
+		allPhasesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
+		sumsOfHarmonics = np.sin(allPhasesOfBaseFrequency)
+		for overtonePosition in range(2,maxHarmonicNumber):
+			possiblyChangedOvertonePosition = self.strategy.getShiftedOvertonePosition(overtonePosition)
+			randomPhaseForThisPartial = random.uniform(0.0,2.0*np.pi)
+			addedValue = \
+				(1.0/possiblyChangedOvertonePosition) \
+				*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*self.params.sineFrequency*allTs + randomPhaseForThisPartial)
 			sumsOfHarmonics += self.strategy.getFactor(overtonePosition) * addedValue
 		return self.params.amplitude * sumsOfHarmonics
