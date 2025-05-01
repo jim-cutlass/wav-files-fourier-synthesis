@@ -13,6 +13,39 @@ class Params:
 		self.sineFrequency=sineFrequency
 		self.durationInSeconds=durationInSeconds
 		self.amplitude=amplitude
+		
+class PhaseStrategy(ABC):
+	@abstractmethod
+	def getInitialPhase(self):
+		pass
+	def getName(self):
+		return type(self).__name__
+		
+class RandomPhaseStrategy(PhaseStrategy):
+	def getInitialPhase(self):
+		return random.uniform(0.0,2.0*np.pi)
+		
+class StandardPhaseStrategy(PhaseStrategy):
+	def getInitialPhase(self):
+		return 0.0
+		
+class SampleStrategy(ABC):
+	@abstractmethod
+	def getSampleValue(self,phase):
+		pass
+	def getName(self):
+		return type(self).__name__
+		
+class SineSampleStrategy(SampleStrategy):
+	def getSampleValue(self, phase):
+		return Math.sin(phase)
+
+class OctaveDoubleSineSampleStrategy(SampleStrategy):
+	def getSampleValue(self, phase):
+		if phase <= 2.0*math.pi:
+			return Math.sin(phase)
+		else:
+			return 2.0*math.sin((phase - 2.0*math.pi)*0.5)
 
 class FactorStrategy(ABC):
 	@abstractmethod
@@ -177,7 +210,7 @@ class StretchNaturalSeventhsToTemperedFactorStrategy(FactorStrategy):
 			return originalOvertonePosition
 			
 class ListsOfStrategies:
-	def getAllStrategies():
+	def getAllFactorStrategies():
 		return [
 			Factor1Strategy(),
 			AlternatingStatefulStrategy(),
@@ -195,29 +228,37 @@ class ListsOfStrategies:
 			FilterOutTheFifthsStrategy(),
 			AddHalfNumberedOvertonesStrategy(),
 		]
+	def getAllSampleStrategies():
+		return [
+			SineSampleStrategy(),
+		]
 
-class WaveDefinition:
-	def __init__(self, params, strategy):
+class SumOfSinesWaveDefinition:
+	def __init__(self, params, frequenciesStrategy, phaseStrategy):
 		self.params = params
-		self.strategy = strategy
+		self.frequenciesStrategy = frequenciesStrategy
+		self.phaseStrategy = phaseStrategy
 	def toneAtAllTs(self,allTs):
 		allPhasesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
 		sumsOfHarmonics = np.sin(allPhasesOfBaseFrequency)
 		for overtonePosition in range(2,maxHarmonicNumber):
-			possiblyChangedOvertonePosition = self.strategy.getShiftedOvertonePosition(overtonePosition)
-			addedValue = \
-				(1.0/possiblyChangedOvertonePosition)*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*self.params.sineFrequency*allTs)
-			sumsOfHarmonics += self.strategy.getFactor(overtonePosition) * addedValue
-		return self.params.amplitude * sumsOfHarmonics
-	# to do: use DRY principle here:
-	def toneAtAllTsWithRandomOvertonePhases(self,allTs):
-		allPhasesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
-		sumsOfHarmonics = np.sin(allPhasesOfBaseFrequency)
-		for overtonePosition in range(2,maxHarmonicNumber):
-			possiblyChangedOvertonePosition = self.strategy.getShiftedOvertonePosition(overtonePosition)
-			randomPhaseForThisPartial = random.uniform(0.0,2.0*np.pi)
+			possiblyChangedOvertonePosition = self.frequenciesStrategy.getShiftedOvertonePosition(overtonePosition)
+			randomPhaseForThisPartial = self.phaseStrategy.getInitialPhase()
 			addedValue = \
 				(1.0/possiblyChangedOvertonePosition) \
 				*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*self.params.sineFrequency*allTs + randomPhaseForThisPartial)
-			sumsOfHarmonics += self.strategy.getFactor(overtonePosition) * addedValue
+			sumsOfHarmonics += self.frequenciesStrategy.getFactor(overtonePosition) * addedValue
 		return self.params.amplitude * sumsOfHarmonics
+		
+class SumOfSamplesWaveDefinition:
+	def __init__(self, params, strategy):
+		self.params = params
+		self.strategy = strategy
+	# NEXT STEP: use toneAtT (...) instead of toneAttAllTs(...)
+	def toneAtAllTs(self,allTs):
+		allSamplesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
+		return np.sin(allSamplesOfBaseFrequency)
+	def toneAtT(self,t):
+		phase=2.0*math.pi*frequency*t
+		result=strategy.getSampleValue(phase)
+		return result
