@@ -14,7 +14,7 @@ samplerate = 44100
 nameOfOutDir = "./out/"
 
 paramsList=[
-	Params(sineFrequency=110.0,durationInSeconds=0.3,amplitude=0.3),
+	Params(sineFrequency=110.0,durationInSeconds=0.1,amplitude=0.3),
 ]
 
 os.makedirs(nameOfOutDir, exist_ok=True)
@@ -24,25 +24,21 @@ sampleStrategies = ListsOfStrategies.getAllSampleStrategies()
 with zipfile.ZipFile('allWavFiles.zip', 'w') as soundsZip:
 	for params in paramsList:
 		durationInSeconds = params.durationInSeconds
-		filenametemplateFactorStrategy = "sound-F-{}-{}-{}s-{}hz.wav"
-		filenametemplateRandomPhase = "sound-FR-{}-{}-{}s-{}hz.wav"
+		filenametemplateFactorStrategy = "sound-{}-{}-{}-{}s-{}hz.wav"
 		filenametemplateSampleStrategy = "sound-S-{}-{}-{}s-{}hz.wav"
 		allTs = np.linspace(0.0, durationInSeconds, num=int(samplerate*durationInSeconds))
 		filenames = []
 		i = 0
-		for strategy in factorStrategies:
-			waveDefinition1 = SumOfSinesWaveDefinition(params,strategy,StandardPhaseStrategy())
-			waveDefinition2 = SumOfSinesWaveDefinition(params,strategy,RandomPhaseStrategy())
-			data = waveDefinition1.toneAtAllTs(allTs)
-			dataWithRandomOvertonePhases = waveDefinition2.toneAtAllTs(allTs)
+		phaseStrategies=[StandardPhaseStrategy(),RandomPhaseStrategy()]
+		for factorStrategy in factorStrategies:
 			i = i+1
-			# to do: more DRY principle here:
-			filename1 = filenametemplateFactorStrategy.format(i,strategy.getName(),durationInSeconds,params.sineFrequency)
-			filename2 = filenametemplateRandomPhase.format(i,strategy.getName(),durationInSeconds,params.sineFrequency)
-			wavfile.write(filename1, samplerate, data.astype(np.float32))
-			wavfile.write(filename2, samplerate, dataWithRandomOvertonePhases.astype(np.float32))
-			soundsZip.write(filename1)
-			soundsZip.write(filename2)
+			for phaseStrategy in phaseStrategies:
+				waveDefinition = SumOfSinesWaveDefinition(params,factorStrategy,phaseStrategy)
+				data = waveDefinition.toneAtAllTs(allTs)
+				filename = filenametemplateFactorStrategy.format(
+					i,phaseStrategy.getName(),factorStrategy.getName(),durationInSeconds,params.sineFrequency)
+				wavfile.write(filename, samplerate, data.astype(np.float32))
+				soundsZip.write(filename)
 		for strategy in sampleStrategies:
 			waveDefinition = SumOfSamplesWaveDefinition(params,strategy)
 			data = waveDefinition.toneAtAllTs(allTs)
