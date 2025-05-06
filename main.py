@@ -3,7 +3,6 @@ import os
 from scipy.io import wavfile
 import zipfile
 
-from synthesize_with_overtones.wave_file_generator import Params
 from synthesize_with_overtones.wave_file_generator import SumOfSinesWaveDefinition
 from synthesize_with_overtones.wave_file_generator import SequenceOfSamplesWaveDefinition
 from synthesize_with_overtones.wave_file_generator import ListsOfStrategies
@@ -13,8 +12,14 @@ from synthesize_with_overtones.wave_file_generator import StandardPhaseStrategy
 samplerate = 44100
 nameOfOutDir = "./out/"
 
+class Params:
+	def __init__(self,sineFrequency,durationInSeconds,amplitude):
+		self.sineFrequency=sineFrequency
+		self.durationInSeconds=durationInSeconds
+		self.amplitude=amplitude
+
 paramsList=[
-	Params(sineFrequency=110.0,durationInSeconds=0.2,amplitude=0.3),
+	Params(sineFrequency=110.0,durationInSeconds=0.8,amplitude=0.3),
 ]
 
 os.makedirs(nameOfOutDir, exist_ok=True)

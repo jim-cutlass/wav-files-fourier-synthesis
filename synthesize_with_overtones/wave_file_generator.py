@@ -7,12 +7,25 @@ maxHarmonicNumber = 1000
 moveFactorForThirds = ((2.0**(1/12.0))**4.0)/(5/4)
 moveFactorForFifths = ((2.0**(1/12.0))**7.0)/(3/2)
 moveFactorForNaturalSevenths = ((2.0**(1/12.0))**10.0)/(7/4)
+		
+class SampleStrategy(ABC):
+	@abstractmethod
+	def getSampleValue(self,phase):
+		pass
+	def getName(self):
+		return type(self).__name__
+		
+class SineSampleStrategy(SampleStrategy):
+	def getSampleValue(self, phase):
+		return math.sin(phase)
 
-class Params:
-	def __init__(self,sineFrequency,durationInSeconds,amplitude):
-		self.sineFrequency=sineFrequency
-		self.durationInSeconds=durationInSeconds
-		self.amplitude=amplitude
+class OctaveDoubleSineSampleStrategy(SampleStrategy):
+	def getSampleValue(self, phase):
+		structuringSine = math.sin(phase*0.25)
+		if structuringSine >= 0.0:
+			return 0.5*math.sin(phase)
+		else:
+			return (-1.0)*math.sin((phase - 2.0*math.pi)*0.5)
 		
 class PhaseStrategy(ABC):
 	@abstractmethod
@@ -28,24 +41,6 @@ class RandomPhaseStrategy(PhaseStrategy):
 class StandardPhaseStrategy(PhaseStrategy):
 	def getInitialPhase(self):
 		return 0.0
-		
-class SampleStrategy(ABC):
-	@abstractmethod
-	def getSampleValue(self,phase):
-		pass
-	def getName(self):
-		return type(self).__name__
-		
-class SineSampleStrategy(SampleStrategy):
-	def getSampleValue(self, phase):
-		return math.sin(phase)
-
-class OctaveDoubleSineSampleStrategy(SampleStrategy):
-	def getSampleValue(self, phase):
-		if phase <= 2.0*math.pi:
-			return 0.5*math.sin(phase)
-		else:
-			return 1.0*math.sin((phase - 2.0*math.pi)*0.5)
 
 class FactorStrategy(ABC):
 	@abstractmethod
@@ -211,6 +206,12 @@ class StretchNaturalSeventhsToTemperedFactorStrategy(FactorStrategy):
 			
 class ListsOfStrategies:
 	def getAllFactorStrategies():
+		# this "return" is only temporary:
+		return [
+			Factor1Strategy(),
+			AlternatingStatefulStrategy(),
+			UseEveryNthHarmonicStatefulStrategy(2),
+		]
 		return [
 			Factor1Strategy(),
 			AlternatingStatefulStrategy(),
@@ -227,6 +228,7 @@ class ListsOfStrategies:
 			FilterOutTheNaturalSeventhsStrategy(),
 			FilterOutTheFifthsStrategy(),
 			AddHalfNumberedOvertonesStrategy(),
+			
 		]
 	def getAllSampleStrategies():
 		return [
@@ -262,5 +264,5 @@ class SequenceOfSamplesWaveDefinition:
 			result.append(self.toneAtPhase(phase))
 		return np.array(result)
 	def toneAtPhase(self,phase):
-		result=self.strategy.getSampleValue(phase)
-		return result
+		sequenceOfSamples=self.strategy.getSampleValue(phase)
+		return self.params.amplitude * sequenceOfSamples
