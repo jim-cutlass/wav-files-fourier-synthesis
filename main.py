@@ -5,7 +5,7 @@ import zipfile
 
 from synthesize_with_overtones.wave_file_generator import Params
 from synthesize_with_overtones.wave_file_generator import SumOfSinesWaveDefinition
-from synthesize_with_overtones.wave_file_generator import SumOfSamplesWaveDefinition
+from synthesize_with_overtones.wave_file_generator import SequenceOfSamplesWaveDefinition
 from synthesize_with_overtones.wave_file_generator import ListsOfStrategies
 from synthesize_with_overtones.wave_file_generator import RandomPhaseStrategy
 from synthesize_with_overtones.wave_file_generator import StandardPhaseStrategy
@@ -14,7 +14,7 @@ samplerate = 44100
 nameOfOutDir = "./out/"
 
 paramsList=[
-	Params(sineFrequency=110.0,durationInSeconds=0.1,amplitude=0.3),
+	Params(sineFrequency=110.0,durationInSeconds=0.2,amplitude=0.3),
 ]
 
 os.makedirs(nameOfOutDir, exist_ok=True)
@@ -22,6 +22,7 @@ os.chdir(nameOfOutDir)
 factorStrategies = ListsOfStrategies.getAllFactorStrategies()
 sampleStrategies = ListsOfStrategies.getAllSampleStrategies()
 with zipfile.ZipFile('allWavFiles.zip', 'w') as soundsZip:
+	# TO DO: refactor: less for-loops here:
 	for params in paramsList:
 		durationInSeconds = params.durationInSeconds
 		filenametemplateFactorStrategy = "sound-{}-{}-{}-{}s-{}hz.wav"
@@ -40,7 +41,7 @@ with zipfile.ZipFile('allWavFiles.zip', 'w') as soundsZip:
 				wavfile.write(filename, samplerate, data.astype(np.float32))
 				soundsZip.write(filename)
 		for strategy in sampleStrategies:
-			waveDefinition = SumOfSamplesWaveDefinition(params,strategy)
+			waveDefinition = SequenceOfSamplesWaveDefinition(params,strategy)
 			data = waveDefinition.toneAtAllTs(allTs)
 			filename = filenametemplateSampleStrategy.format(i,strategy.getName(),durationInSeconds,params.sineFrequency)
 			wavfile.write(filename, samplerate, data.astype(np.float32))

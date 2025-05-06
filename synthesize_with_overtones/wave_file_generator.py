@@ -38,14 +38,14 @@ class SampleStrategy(ABC):
 		
 class SineSampleStrategy(SampleStrategy):
 	def getSampleValue(self, phase):
-		return Math.sin(phase)
+		return math.sin(phase)
 
 class OctaveDoubleSineSampleStrategy(SampleStrategy):
 	def getSampleValue(self, phase):
 		if phase <= 2.0*math.pi:
-			return Math.sin(phase)
+			return 0.5*math.sin(phase)
 		else:
-			return 2.0*math.sin((phase - 2.0*math.pi)*0.5)
+			return 1.0*math.sin((phase - 2.0*math.pi)*0.5)
 
 class FactorStrategy(ABC):
 	@abstractmethod
@@ -231,6 +231,7 @@ class ListsOfStrategies:
 	def getAllSampleStrategies():
 		return [
 			SineSampleStrategy(),
+			OctaveDoubleSineSampleStrategy()
 		]
 
 class SumOfSinesWaveDefinition:
@@ -249,16 +250,17 @@ class SumOfSinesWaveDefinition:
 				*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*self.params.sineFrequency*allTs + randomPhaseForThisPartial)
 			sumsOfHarmonics += self.frequenciesStrategy.getFactor(overtonePosition) * addedValue
 		return self.params.amplitude * sumsOfHarmonics
-		
-class SumOfSamplesWaveDefinition:
+
+class SequenceOfSamplesWaveDefinition:
 	def __init__(self, params, strategy):
 		self.params = params
 		self.strategy = strategy
-	# NEXT STEP: use toneAtT (...) instead of toneAttAllTs(...)
 	def toneAtAllTs(self,allTs):
-		allSamplesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
-		return np.sin(allSamplesOfBaseFrequency)
-	def toneAtT(self,t):
-		phase=2.0*math.pi*frequency*t
-		result=strategy.getSampleValue(phase)
+		result = []
+		allPhasesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
+		for phase in allPhasesOfBaseFrequency.tolist():
+			result.append(self.toneAtPhase(phase))
+		return np.array(result)
+	def toneAtPhase(self,phase):
+		result=self.strategy.getSampleValue(phase)
 		return result
