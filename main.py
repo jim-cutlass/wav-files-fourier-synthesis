@@ -3,12 +3,12 @@ import os
 from scipy.io import wavfile
 import zipfile
 
-from synthesize_with_overtones.wave_file_generator import SumOfSinesWaveDefinition
-from synthesize_with_overtones.wave_file_generator import ListOfSumOfOvertonesStrategies
-from synthesize_with_overtones.wave_file_generator import RandomPhaseStrategy
-from synthesize_with_overtones.wave_file_generator import StandardPhaseStrategy
-from synthesize_with_sample_sequences.wave_file_generator import SequenceOfSamplesWaveDefinition
-from synthesize_with_sample_sequences.wave_file_generator import ListOfSampleStrategies
+from synthesize_with_overtones import SumOfSinesWaveDefinition
+from synthesize_with_overtones import ListOfSumOfOvertonesStrategies
+from synthesize_with_overtones import RandomPhaseStrategy
+from synthesize_with_overtones import StandardPhaseStrategy
+from synthesize_with_sample_sequences import SequenceOfSamplesWaveDefinition
+from synthesize_with_sample_sequences import ListOfSampleStrategies
 
 samplerate = 44100
 nameOfOutDir = "./out/"
