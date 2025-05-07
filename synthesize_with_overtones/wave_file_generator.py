@@ -8,25 +8,6 @@ moveFactorForThirds = ((2.0**(1/12.0))**4.0)/(5/4)
 moveFactorForFifths = ((2.0**(1/12.0))**7.0)/(3/2)
 moveFactorForNaturalSevenths = ((2.0**(1/12.0))**10.0)/(7/4)
 		
-class SampleStrategy(ABC):
-	@abstractmethod
-	def getSampleValue(self,phase):
-		pass
-	def getName(self):
-		return type(self).__name__
-		
-class SineSampleStrategy(SampleStrategy):
-	def getSampleValue(self, phase):
-		return math.sin(phase)
-
-class OctaveDoubleSineSampleStrategy(SampleStrategy):
-	def getSampleValue(self, phase):
-		structuringSine = math.sin(phase*0.25)
-		if structuringSine >= 0.0:
-			return 0.5*math.sin(phase)
-		else:
-			return (-1.0)*math.sin((phase - 2.0*math.pi)*0.5)
-		
 class PhaseStrategy(ABC):
 	@abstractmethod
 	def getInitialPhase(self):
@@ -204,13 +185,13 @@ class StretchNaturalSeventhsToTemperedFactorStrategy(FactorStrategy):
 		else:
 			return originalOvertonePosition
 			
-class ListsOfStrategies:
-	def getAllFactorStrategies():
+class ListOfSumOfOvertonesStrategies:
+	def getAllStrategies():
 		# this "return" is only temporary:
 		return [
 			Factor1Strategy(),
 			AlternatingStatefulStrategy(),
-			UseEveryNthHarmonicStatefulStrategy(2),
+			AddHalfNumberedOvertonesStrategy()
 		]
 		return [
 			Factor1Strategy(),
@@ -228,12 +209,6 @@ class ListsOfStrategies:
 			FilterOutTheNaturalSeventhsStrategy(),
 			FilterOutTheFifthsStrategy(),
 			AddHalfNumberedOvertonesStrategy(),
-			
-		]
-	def getAllSampleStrategies():
-		return [
-			SineSampleStrategy(),
-			OctaveDoubleSineSampleStrategy()
 		]
 
 class SumOfSinesWaveDefinition:
@@ -252,17 +227,3 @@ class SumOfSinesWaveDefinition:
 				*np.sin(possiblyChangedOvertonePosition*2.0*np.pi*self.params.sineFrequency*allTs + randomPhaseForThisPartial)
 			sumsOfHarmonics += self.frequenciesStrategy.getFactor(overtonePosition) * addedValue
 		return self.params.amplitude * sumsOfHarmonics
-
-class SequenceOfSamplesWaveDefinition:
-	def __init__(self, params, strategy):
-		self.params = params
-		self.strategy = strategy
-	def toneAtAllTs(self,allTs):
-		result = []
-		allPhasesOfBaseFrequency = 2.0 * np.pi * self.params.sineFrequency * allTs
-		for phase in allPhasesOfBaseFrequency.tolist():
-			result.append(self.toneAtPhase(phase))
-		return np.array(result)
-	def toneAtPhase(self,phase):
-		sequenceOfSamples=self.strategy.getSampleValue(phase)
-		return self.params.amplitude * sequenceOfSamples
